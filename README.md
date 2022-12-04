@@ -102,4 +102,4 @@ HybridCLR是原生的c#热更新方案。通俗地说，il2cpp相当于mono的ao
 ## license
 
 HybridCLR is licensed under the [MIT](https://github.com/focus-creative-games/hybridclr/blob/main/LICENSE) license
-# hybridclr对应的commit号0540b31aa739fd275d8cfcd861cb41568d4a982c注释
+# hybridclr对应的commit号0540b31aa739fd275d8cfcd861cb41568d4a982c注释版本
