@@ -141,6 +141,8 @@ namespace interpreter
 			_frameTopIdx -= count;
 		}
 
+		/// @brief 获取栈帧栈顶指针
+		/// @return 
 		InterpFrame* GetTopFrame() const
 		{
 			if (_frameTopIdx > 0)
@@ -153,44 +155,58 @@ namespace interpreter
 			}
 		}
 
+		/// @brief 分配异常流
+		/// @param count 
+		/// @return 
 		ExceptionFlowInfo* AllocExceptionFlow(int32_t count)
 		{
-			if (_exceptionFlowTopIdx + count < _exceptionFlowCount)
+			if (_exceptionFlowTopIdx + count < _exceptionFlowCount)  //如果申请的空间在合适范围
 			{
-				ExceptionFlowInfo* efi = _exceptionFlowBase + _exceptionFlowTopIdx;
-				_exceptionFlowTopIdx += count;
-				return efi;
+				ExceptionFlowInfo* efi = _exceptionFlowBase + _exceptionFlowTopIdx;//得到申请空间的首地址
+				_exceptionFlowTopIdx += count;//栈顶索引加count大小
+				return efi;//返回申请首地址
 			}
-			il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetExecutionEngineException("AllocExceptionFlowZero"));
-			return nullptr;
+			il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetExecutionEngineException("AllocExceptionFlowZero")); //如果当前已申请的+要申请的空间大小大于初始设置的最大大小,那么就报栈溢出异常
+			return nullptr;//返回null
 		}
 
+		/// @brief 获取异常流栈顶大小
+		/// @return 
 		uint32_t GetExceptionFlowTopIdx() const
 		{
 			return _exceptionFlowTopIdx;
 		}
 
+		/// @brief 设置异常流栈顶索引
+		/// @param exTopIdx 
 		void SetExceptionFlowTopIdx(uint32_t exTopIdx)
 		{
 			_exceptionFlowTopIdx = exTopIdx;
 		}
 
+		/// @brief /检测下异常流栈顶数据索引是否符合规范
+		/// @param top 
 		void SetExceptionFlowTop(ExceptionFlowInfo* top)
 		{
 			_exceptionFlowTopIdx = (int32_t)(top - _exceptionFlowBase);
 			IL2CPP_ASSERT(_exceptionFlowTopIdx >= 0 && _exceptionFlowTopIdx <= _exceptionFlowCount);
 		}
 
+		/// @brief 塞入一个程序集的镜像
+		/// @param image 
 		void PushExecutingImage(const Il2CppImage* image)
 		{
 			_executingImageStack.push(image);
 		}
 
+		/// @brief 弹出一个镜像
 		void PopExecutingImage()
 		{
 			_executingImageStack.pop();
 		}
 
+		/// @brief 获取顶部镜像
+		/// @return 
 		const Il2CppImage* GetTopExecutingImage() const
 		{
 			if (_executingImageStack.empty())
@@ -203,6 +219,8 @@ namespace interpreter
 			}
 		}
 
+		/// @brief 收集栈帧
+		/// @param stackFrames 
 		void CollectFrames(il2cpp::vm::StackFrames* stackFrames)
 		{
 			for (int32_t i = 0; i < _frameTopIdx; i++)
@@ -221,22 +239,23 @@ namespace interpreter
 
 	private:
 
-		StackObject* _stackBase;
-		int32_t _stackSize;
-		int32_t _stackTopIdx;
+		StackObject* _stackBase;//申请的栈空间首地址
+		int32_t _stackSize;//最大栈大小
+		int32_t _stackTopIdx;//栈顶部索引
 
-		InterpFrame* _frameBase;
-		int32_t _frameTopIdx;
-		int32_t _frameCount;
+		InterpFrame* _frameBase;//栈帧首地址
+		int32_t _frameTopIdx;//最大栈帧大小
+		int32_t _frameCount;//栈帧部索引
 
-		ExceptionFlowInfo* _exceptionFlowBase;
-		int32_t _exceptionFlowTopIdx;
-		int32_t _exceptionFlowCount;
+		ExceptionFlowInfo* _exceptionFlowBase;//异常流首地址
+		int32_t _exceptionFlowTopIdx;//最大异常流大小
+		int32_t _exceptionFlowCount;//异常流索引
 
 
-		std::stack<const Il2CppImage*> _executingImageStack;
+		std::stack<const Il2CppImage*> _executingImageStack;//执行中的镜像集合
 	};
 
+	/// @brief 执行中的镜像
 	class ExecutingInterpImageScope
 	{
 	public:
@@ -254,6 +273,7 @@ namespace interpreter
 		MachineState& _state;
 	};
 
+	/// @brief 栈帧操作,看着像操作的是_frameBaseIdx到GetFrameTopIdx()的数据
 	class InterpFrameGroup
 	{
 	public:
@@ -262,19 +282,24 @@ namespace interpreter
 
 		}
 
+		/// @brief 清理
 		void CleanUpFrames()
 		{
-			IL2CPP_ASSERT(_machineState.GetFrameTopIdx() >= _frameBaseIdx);
-			uint32_t n = _machineState.GetFrameTopIdx() - _frameBaseIdx;
-			if (n > 0)
+			IL2CPP_ASSERT(_machineState.GetFrameTopIdx() >= _frameBaseIdx);//保证在_frameBaseIdx到到GetFrameTopIdx()范围
+			uint32_t n = _machineState.GetFrameTopIdx() - _frameBaseIdx;//多少数据
+			if (n > 0)//如果有
 			{
 				for (uint32_t i = 0; i < n; i++)
 				{
-					LeaveFrame();
+					LeaveFrame();//释放他
 				}
 			}
 		}
 
+		/// @brief 从解释获取栈帧数据
+		/// @param imi 
+		/// @param argBase 
+		/// @return 
 		InterpFrame* EnterFrameFromInterpreter(const InterpMethodInfo* imi, StackObject* argBase)
 		{
 #if IL2CPP_ENABLE_PROFILER

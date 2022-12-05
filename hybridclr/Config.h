@@ -11,9 +11,9 @@ namespace hybridclr
 	public:
 		Config()
 		{
-			_threadObjectStackSize = 1024 * 128;//线程堆栈大小 单位字节
-			_threadFrameStackSize = 1024 * 2;//线程栈帧大小 单位字节
-			_threadExceptionFlowSize = 512;//线程异常流大小 单位字节
+			_threadObjectStackSize = 1024 * 128;//初始栈大小 单位字节
+			_threadFrameStackSize = 1024 * 2;//栈帧大小 单位字节
+			_threadExceptionFlowSize = 512;//异常流大小 单位字节
 		}
 
 		static Config& GetIns()
