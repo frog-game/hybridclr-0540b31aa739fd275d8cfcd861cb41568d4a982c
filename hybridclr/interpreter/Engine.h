@@ -84,7 +84,7 @@ namespace interpreter
 			return _stackTopIdx;
 		}
 
-		/// @brief 分配栈槽
+		/// @brief 分配栈槽空间
 		/// @param slotNum 
 		/// @return image.png
 		StackObject* AllocStackSlot(int32_t slotNum)
@@ -96,7 +96,7 @@ namespace interpreter
 			StackObject* dataPtr = _stackBase + _stackTopIdx;//得到栈顶指针其实也就是指针执行你刚请求的空间的首地址
 			_stackTopIdx += slotNum;//栈顶索引增加slotNum大小
 #if DEBUG
-			std::memset(dataPtr, 0xEA, slotNum * sizeof(StackObject));//用来包内存0XEA错误 ??
+			std::memset(dataPtr, 0xEA, slotNum * sizeof(StackObject));//用来包内存0XEA错误  这个地方等验证？？
 #endif
 			return dataPtr;//返回刚才申请的slotNum大小空间的首地址
 		}
@@ -115,7 +115,7 @@ namespace interpreter
 			return _frameTopIdx;
 		}
 
-		/// @brief 塞入一个栈帧数据
+		/// @brief 塞入获取一个新的栈帧数据
 		/// @return 
 		InterpFrame* PushFrame()
 		{
@@ -184,7 +184,7 @@ namespace interpreter
 			_exceptionFlowTopIdx = exTopIdx;
 		}
 
-		/// @brief /检测下异常流栈顶数据索引是否符合规范
+		/// @brief 设置并检测下异常流栈顶数据索引是否符合规范
 		/// @param top 
 		void SetExceptionFlowTop(ExceptionFlowInfo* top)
 		{
@@ -244,8 +244,8 @@ namespace interpreter
 		int32_t _stackTopIdx;//栈顶部索引
 
 		InterpFrame* _frameBase;//栈帧首地址
-		int32_t _frameTopIdx;//最大栈帧大小
-		int32_t _frameCount;//栈帧部索引
+		int32_t _frameTopIdx;//栈帧部索引
+		int32_t _frameCount;//最大栈帧大小 
 
 		ExceptionFlowInfo* _exceptionFlowBase;//异常流首地址
 		int32_t _exceptionFlowTopIdx;//最大异常流大小
@@ -296,68 +296,79 @@ namespace interpreter
 			}
 		}
 
-		/// @brief 从解释获取栈帧数据
+		/// @brief 从解释器获取栈帧数据
 		/// @param imi 
 		/// @param argBase 
 		/// @return 
 		InterpFrame* EnterFrameFromInterpreter(const InterpMethodInfo* imi, StackObject* argBase)
 		{
-#if IL2CPP_ENABLE_PROFILER
-			il2cpp_codegen_profiler_method_enter(imi->method);
+#if IL2CPP_ENABLE_PROFILER //激活性能分析
+			il2cpp_codegen_profiler_method_enter(imi->method);//开启性能分析
 #endif
-			int32_t oldStackTop = _machineState.GetStackTop();
-			StackObject* stackBasePtr = _machineState.AllocStackSlot(imi->maxStackSize - imi->argStackObjectSize);
-			InterpFrame* newFrame = _machineState.PushFrame();
-			*newFrame = { imi, argBase, oldStackTop, nullptr, nullptr, nullptr, 0, 0 };
-			PUSH_STACK_FRAME(imi->method);
-			return newFrame;
+			int32_t oldStackTop = _machineState.GetStackTop();//获取栈顶索引
+			StackObject* stackBasePtr = _machineState.AllocStackSlot(imi->maxStackSize - imi->argStackObjectSize);//分配 local + evalstack 大小的空间
+			InterpFrame* newFrame = _machineState.PushFrame();//得到一个新的栈帧数据
+			*newFrame = { imi, argBase, oldStackTop, nullptr, nullptr, nullptr, 0, 0 };//初始化
+			PUSH_STACK_FRAME(imi->method);//向IL2CPP 塞入一个栈帧
+
+			return newFrame;//返回新的栈帧首地址
 		}
 
 
+		/// @brief 从原生获取栈数据
+		/// @param imi 
+		/// @param argBase 
+		/// @return 
 		InterpFrame* EnterFrameFromNative(const InterpMethodInfo* imi, StackObject* argBase)
 		{
-#if IL2CPP_ENABLE_PROFILER
-			il2cpp_codegen_profiler_method_enter(imi->method);
+#if IL2CPP_ENABLE_PROFILER //激活性能分析
+			il2cpp_codegen_profiler_method_enter(imi->method);//开启性能分析
 #endif
-			int32_t oldStackTop = _machineState.GetStackTop();
-			StackObject* stackBasePtr = _machineState.AllocStackSlot(imi->maxStackSize);
-			InterpFrame* newFrame = _machineState.PushFrame();
-			*newFrame = { imi, stackBasePtr, oldStackTop, nullptr, nullptr, nullptr, 0, 0 };
+			int32_t oldStackTop = _machineState.GetStackTop();//获取栈顶索引
+			StackObject* stackBasePtr = _machineState.AllocStackSlot(imi->maxStackSize);//分配 local + evalstack + evalstack 大小的空间
+			InterpFrame* newFrame = _machineState.PushFrame();//得到一个新的栈帧数据
+			*newFrame = { imi, stackBasePtr, oldStackTop, nullptr, nullptr, nullptr, 0, 0 };//初始化
 
-			// if not prepare arg stack. copy from args
+			// if not prepare arg stack. copy from args 如果没有准备 Arg 堆栈。从参数复制
 			if (imi->args)
 			{
-				IL2CPP_ASSERT(imi->argCount == metadata::GetActualArgumentNum(imi->method));
-				if (imi->isTrivialCopyArgs)
+				IL2CPP_ASSERT(imi->argCount == metadata::GetActualArgumentNum(imi->method));//参数合法性判断
+				if (imi->isTrivialCopyArgs)//如果是都是这几个类型 I1,U1,I2,U2,U8的话,看代码分析像如果是简单类型不是struct类型就认为符号条件
 				{
-					CopyStackObject(stackBasePtr, argBase, imi->argStackObjectSize);
+					CopyStackObject(stackBasePtr, argBase, imi->argStackObjectSize);//从参数复制
 				}
 				else
 				{
-					CopyArgs(stackBasePtr, argBase, imi->args, imi->argCount, imi->argStackObjectSize);
+					CopyArgs(stackBasePtr, argBase, imi->args, imi->argCount, imi->argStackObjectSize);//从arg堆栈赋值
 				}
 			}
-			PUSH_STACK_FRAME(imi->method);
-			return newFrame;
+			PUSH_STACK_FRAME(imi->method);//向IL2CPP 塞入一个栈帧
+			return newFrame;//返回新的栈帧首地址
 		}
 
+		/// @brief 离开当前栈帧集合
+		/// @return 
 		InterpFrame* LeaveFrame()
 		{
-			IL2CPP_ASSERT(_machineState.GetFrameTopIdx() > _frameBaseIdx);
-			POP_STACK_FRAME();
-			InterpFrame* frame = _machineState.GetTopFrame();
-#if IL2CPP_ENABLE_PROFILER
-			il2cpp_codegen_profiler_method_exit(frame->method->method);
+			IL2CPP_ASSERT(_machineState.GetFrameTopIdx() > _frameBaseIdx);//验证合法性
+			POP_STACK_FRAME();//IL2CPP退栈
+			InterpFrame* frame = _machineState.GetTopFrame();//获得栈顶栈帧
+#if IL2CPP_ENABLE_PROFILER//激活性能分析
+			il2cpp_codegen_profiler_method_exit(frame->method->method);//开启性能分析
 #endif
-			if (frame->exFlowBase)
+			if (frame->exFlowBase)//如果有异常流
 			{
-				_machineState.SetExceptionFlowTop(frame->exFlowBase);
+				_machineState.SetExceptionFlowTop(frame->exFlowBase);//设置并检测下异常流栈顶数据索引是否符合规范
 			}
-			_machineState.PopFrame();
-			_machineState.SetStackTop(frame->oldStackTop);
-			return _machineState.GetFrameTopIdx() > _frameBaseIdx ? _machineState.GetTopFrame() : nullptr;
+			_machineState.PopFrame();//将栈帧索引减少
+			_machineState.SetStackTop(frame->oldStackTop);//这块其实就是把你在刚开始new出新空间时候那个时候的索引保存了下来然后再重新设置一下就等价于恢复到以前的数据情况了
+			return _machineState.GetFrameTopIdx() > _frameBaseIdx ? _machineState.GetTopFrame() : nullptr;//如果超了就还原
 		}
 
+		/// @brief 申请size大小的空间
+		//calloc函数会自动将内存初始化为0，和malloc函数不一样不用担心这个事情
+		/// @param size 
+		/// @return 
 		void* AllocLoc(size_t size)
 		{
 			uint32_t soNum = (uint32_t)((size + sizeof(StackObject) - 1) / sizeof(StackObject));
@@ -367,13 +378,14 @@ namespace interpreter
 			return data;
  		}
 
-		size_t GetFrameCount() const { return _machineState.GetFrameTopIdx() - _frameBaseIdx; }
+		size_t GetFrameCount() const { return _machineState.GetFrameTopIdx() - _frameBaseIdx; }//获得当前栈帧的数据大小
 	private:
 		MachineState& _machineState;
 		int32_t _stackBaseIdx;
 		uint32_t _frameBaseIdx;
 	};
 
+	/// @brief 对向unity底层利用BoehmGC算法申请一块固定大小的堆栈空间进行操作
 	class StackObjectAllocScope
 	{
 	private:
@@ -384,16 +396,16 @@ namespace interpreter
 	public:
 		StackObjectAllocScope(MachineState& state, int32_t count) : _state(state), _count(count), _originStackTop(_state.GetStackTop())
 		{
-			_data = state.AllocStackSlot(count);
+			_data = state.AllocStackSlot(count);//申请空间
 		}
 
 		~StackObjectAllocScope()
 		{
-			IL2CPP_ASSERT(_state.GetStackTop() > _originStackTop);
-			_state.SetStackTop(_originStackTop);
+			IL2CPP_ASSERT(_state.GetStackTop() > _originStackTop);//检查合法性,这块也不用担心IL2CPP_ASSERT 会报异常停下来不执行下面的_state.SetStackTop,看了源码IL2CPP_ASSERT只是在debug模式下才会触发报异常,并停止执行操作
+			_state.SetStackTop(_originStackTop);//设置原始大小
 		}
 
-		StackObject* GetData() const { return _data; }
+		StackObject* GetData() const { return _data; }//获取申请的空间数据
 	};
 }
 }
