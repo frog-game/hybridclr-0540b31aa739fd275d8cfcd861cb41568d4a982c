@@ -37,13 +37,13 @@ namespace interpreter
 {
 
 
-#pragma region memory
+#pragma region memory//内存相关
 
-#define LOCAL_ALLOC(size) interpFrameGroup.AllocLoc(size)
+#define LOCAL_ALLOC(size) interpFrameGroup.AllocLoc(size)//申请空间
 
 #pragma endregion
 
-#pragma region arith
+#pragma region arith//一些检测和运算方面的东西
 
 	inline bool CheckAddOverflow(int32_t a, int32_t b)
 	{
@@ -558,7 +558,7 @@ namespace interpreter
 
 #pragma endregion
 
-#pragma region object
+#pragma region object//对象相关
 
 	inline void INIT_CLASS(Il2CppClass* klass)
 	{

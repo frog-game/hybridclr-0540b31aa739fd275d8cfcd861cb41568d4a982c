@@ -34,7 +34,7 @@ namespace hybridclr
 namespace interpreter
 {
 
-	/// @brief 机器状态
+	/// @brief 当前线程局部数据
 	class MachineState
 	{
 	public:

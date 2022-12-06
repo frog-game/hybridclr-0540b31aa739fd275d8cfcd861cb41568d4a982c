@@ -24,12 +24,14 @@ namespace hybridclr
 {
 	namespace interpreter
 	{
-		il2cpp::os::ThreadLocalValue InterpreterModule::s_machineState;
+		il2cpp::os::ThreadLocalValue InterpreterModule::s_machineState;//InterpreterModule成员变量s_machineState在类声明的外部初始化，这是c++语法
 
-		static std::unordered_map<const char*, Managed2NativeCallMethod, CStringHash, CStringEqualTo> g_managed2natives;
-		static std::unordered_map<const char*, Il2CppMethodPointer, CStringHash, CStringEqualTo> g_native2manageds;
-		static std::unordered_map<const char*, Il2CppMethodPointer, CStringHash, CStringEqualTo> g_adjustThunks;
+		static std::unordered_map<const char*, Managed2NativeCallMethod, CStringHash, CStringEqualTo> g_managed2natives;//g_managed2natives 全局的无序map容器 主要用来manged转natives使用
+		static std::unordered_map<const char*, Il2CppMethodPointer, CStringHash, CStringEqualTo> g_native2manageds;//g_native2manageds 全局的无序map容器主要用来natives转manged使用
+		static std::unordered_map<const char*, Il2CppMethodPointer, CStringHash, CStringEqualTo> g_adjustThunks;//g_adjustThunks 全局的无序map容器
 
+		/// @brief 得到当前线程局部数据
+		/// @return 
 		MachineState& InterpreterModule::GetCurrentThreadMachineState()
 		{
 			MachineState* state = nullptr;
@@ -42,6 +44,7 @@ namespace hybridclr
 			return *state;
 		}
 
+		/// @brief 是否数据
 		void InterpreterModule::FreeThreadLocalMachineState()
 		{
 			MachineState* state = nullptr;
@@ -53,6 +56,7 @@ namespace hybridclr
 			}
 		}
 
+		/// @brief 初始化
 		void InterpreterModule::Initialize()
 		{
 			for (size_t i = 0; ; i++)

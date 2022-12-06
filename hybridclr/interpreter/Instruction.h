@@ -6,7 +6,7 @@ namespace hybridclr
 {
 namespace interpreter
 {
-
+	/// @brief 前缀标识
 	enum class PrefixFlags
 	{
 		None = 0,
@@ -20,6 +20,7 @@ namespace interpreter
 
 	extern uint16_t g_instructionSizes[];
 
+	/// @brief 操作指令
 	enum class HiOpcodeEnum : uint16_t
 	{
 		None,
@@ -845,8 +846,8 @@ namespace interpreter
 		HiOpcodeEnum type;
 	};
 
-#pragma region instruction
-#pragma pack(push, 1)
+#pragma region instruction //折叠代码使用
+#pragma pack(push, 1)//指把原来对齐方式设置压栈，并设新的对齐方式设置为一个字节对齐
 	//!!!{{INST
 
 	struct IRInitLocals_n_2 : IRCommon

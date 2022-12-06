@@ -3,6 +3,8 @@
 
 namespace hybridclr
 {
+	
+/// @brief 一些结构体定义
 namespace interpreter
 {
 
