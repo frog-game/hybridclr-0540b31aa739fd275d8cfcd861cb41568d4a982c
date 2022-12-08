@@ -1210,6 +1210,7 @@ namespace interpreter
 }
 
 	// maxStackSize包含 arg + local + eval,对于解释器栈来说，可能多余
+	//从AOT生成栈帧
 #define PREPARE_NEW_FRAME_FROM_NATIVE(newMethodInfo, argBasePtr, retPtr) { \
 	imi = newMethodInfo->interpData ? (InterpMethodInfo*)newMethodInfo->interpData : InterpreterModule::GetInterpMethodInfo(newMethodInfo); \
 	frame = interpFrameGroup.EnterFrameFromNative(imi, argBasePtr); \
@@ -1218,6 +1219,7 @@ namespace interpreter
 	localVarBase = frame->stackBasePtr; \
 }
 
+//从解释器生成栈帧
 #define PREPARE_NEW_FRAME_FROM_INTERPRETER(newMethodInfo, argBasePtr, retPtr) { \
 	imi = newMethodInfo->interpData ? (InterpMethodInfo*)newMethodInfo->interpData : InterpreterModule::GetInterpMethodInfo(newMethodInfo); \
 	frame = interpFrameGroup.EnterFrameFromInterpreter(imi, argBasePtr); \
@@ -1578,28 +1580,28 @@ else \
 
 	void Interpreter::Execute(const MethodInfo* methodInfo, StackObject* args, void* ret)
 	{
-		INIT_CLASS(methodInfo->klass);
-		MachineState& machine = InterpreterModule::GetCurrentThreadMachineState();
-		InterpFrameGroup interpFrameGroup(machine);
+		INIT_CLASS(methodInfo->klass);//初始化类
+		MachineState& machine = InterpreterModule::GetCurrentThreadMachineState();//获取线程局部数据
+		InterpFrameGroup interpFrameGroup(machine);//声明一个栈帧操作集
 
-		const InterpMethodInfo* imi;
-		InterpFrame* frame;
-		StackObject* localVarBase;
-		byte* ipBase;
-		byte* ip;
+		const InterpMethodInfo* imi;//声明一个解释器方法数据指针
+		InterpFrame* frame;//解释器栈帧指针
+		StackObject* localVarBase;//函数帧栈的基准位置指针
+		byte* ipBase;//代码数据指针基准指针
+		byte* ip;//用来偏移用的
 
-		Il2CppException* lastUnwindException;
+		Il2CppException* lastUnwindException;//上次展开异常
 
-		PREPARE_NEW_FRAME_FROM_NATIVE(methodInfo, args, ret);
+		PREPARE_NEW_FRAME_FROM_NATIVE(methodInfo, args, ret);//从AOT生成栈帧
 
-		StackObject tempRet[kMaxRetValueTypeStackObjectSize];
+		StackObject tempRet[kMaxRetValueTypeStackObjectSize];//用于返回结果
 
 	LoopStart:
 		try
 		{
 			for (;;)
 			{
-				switch (*(HiOpcodeEnum*)ip)
+				switch (*(HiOpcodeEnum*)ip)//指令
 				{
 #pragma region memory
 					//!!!{{MEMORY

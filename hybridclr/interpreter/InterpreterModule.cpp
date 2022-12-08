@@ -62,7 +62,7 @@ namespace hybridclr
 			for (size_t i = 0; ; i++)
 			{
 				Managed2NativeMethodInfo& method = g_managed2nativeStub[i];
-				if (!method.signature)
+				if (!method.signature)//如果没有签名
 				{
 					break;
 				}
@@ -71,7 +71,7 @@ namespace hybridclr
 			for (size_t i = 0; ; i++)
 			{
 				Native2ManagedMethodInfo& method = g_native2managedStub[i];
-				if (!method.signature)
+				if (!method.signature)//如果没有签名
 				{
 					break;
 				}
@@ -81,7 +81,7 @@ namespace hybridclr
 			for (size_t i = 0; ; i++)
 			{
 				NativeAdjustThunkMethodInfo& method = g_adjustThunkStub[i];
-				if (!method.signature)
+				if (!method.signature)//如果没有签名
 				{
 					break;
 				}
@@ -89,38 +89,60 @@ namespace hybridclr
 			}
 		}
 
+		/// @brief 报NotSupportNative2Managed异常错误
 		static void NotSupportNative2Managed()
 		{
 			il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetExecutionEngineException("NotSupportNative2Managed"));
 		}
 
+		/// @brief 报Invoke method missing异常错误
+		/// @param  
+		/// @param method 
+		/// @param  
+		/// @param  
+		/// @return 
 		static void* NotSupportInvoke(Il2CppMethodPointer, const MethodInfo* method, void*, void**)
 		{
 			char sigName[1000];
-			ComputeSignature(method, true, sigName, sizeof(sigName) - 1);
+			ComputeSignature(method, true, sigName, sizeof(sigName) - 1);//计算签名
 			TEMP_FORMAT(errMsg, "Invoke method missing. ABI:%s sinature:%s %s.%s::%s", HYBRIDCLR_ABI_NAME, sigName, method->klass->namespaze, method->klass->name, method->name);
 			il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetExecutionEngineException(errMsg));
 			return nullptr;
 		}
 
+		/// @brief 获取函数指针Managed2NativeCallMethod
+		/// @tparam T 
+		/// @param method 
+		/// @param forceStatic 
+		/// @return 
 		template<typename T>
 		const Managed2NativeCallMethod GetManaged2NativeMethod(const T* method, bool forceStatic)
 		{
 			char sigName[1000];
-			ComputeSignature(method, !forceStatic, sigName, sizeof(sigName) - 1);
+			ComputeSignature(method, !forceStatic, sigName, sizeof(sigName) - 1);//计算签名
 			auto it = g_managed2natives.find(sigName);
 			return it != g_managed2natives.end() ? it->second : nullptr;
 		}
 
+		/// @brief 从g_native2manageds容器获取指向普通执行函数指针
+		/// @tparam T 
+		/// @param method 
+		/// @param forceStatic 
+		/// @return 
 		template<typename T>
 		const Il2CppMethodPointer GetNative2ManagedMethod(const T* method, bool forceStatic)
 		{
 			char sigName[1000];
-			ComputeSignature(method, !forceStatic, sigName, sizeof(sigName) - 1);
+			ComputeSignature(method, !forceStatic, sigName, sizeof(sigName) - 1);//计算签名
 			auto it = g_native2manageds.find(sigName);
 			return it != g_native2manageds.end() ? it->second : NotSupportNative2Managed;
 		}
 
+		/// @brief 从g_adjustThunks容器获取指向普通执行函数指针
+		/// @tparam T 
+		/// @param method 
+		/// @param forceStatic 
+		/// @return 
 		template<typename T>
 		const Il2CppMethodPointer GetNativeAdjustMethodMethod(const T* method, bool forceStatic)
 		{
@@ -130,12 +152,18 @@ namespace hybridclr
 			return it != g_adjustThunks.end() ? it->second : NotSupportNative2Managed;
 		}
 
+		/// @brief 抛出方法不支持异常
+		/// @param method 
+		/// @param desc 
 		static void RaiseMethodNotSupportException(const MethodInfo* method, const char* desc)
 		{
 			TEMP_FORMAT(errMsg, "%s. %s.%s::%s", desc, method->klass->namespaze, method->klass->name, method->name);
 			il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetExecutionEngineException(errMsg));
 		}
 
+		/// @brief 抛出方法不支持异常
+		/// @param method 
+		/// @param desc 
 		static void RaiseMethodNotSupportException(const Il2CppMethodDefinition* method, const char* desc)
 		{
 			Il2CppClass* klass = il2cpp::vm::GlobalMetadata::GetTypeInfoFromTypeDefinitionIndex(method->declaringType);
@@ -143,104 +171,119 @@ namespace hybridclr
 			il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetExecutionEngineException(errMsg));
 		}
 
+		/// @brief 获得函数指针
+		/// @param method 
+		/// @return 
 		Il2CppMethodPointer InterpreterModule::GetMethodPointer(const Il2CppMethodDefinition* method)
 		{
-			metadata::InterpreterImage* image = metadata::MetadataModule::GetImage(method);
+			metadata::InterpreterImage* image = metadata::MetadataModule::GetImage(method);//获取镜像
 			if (image && image->IsHotPatch())
 			{
-				Il2CppMethodPointer methodPointer = ((metadata::DifferentialHybridImage*)image)->TryGetMethodPointer(method);
+				Il2CppMethodPointer methodPointer = ((metadata::DifferentialHybridImage*)image)->TryGetMethodPointer(method); //通过method指针减去首地址得到索引，然后从容器中去尝试获取函数指针
 				if (methodPointer)
 				{
 					return methodPointer;
 				}
 			}
-			Il2CppMethodPointer ncm = GetNative2ManagedMethod(method, false);
+			Il2CppMethodPointer ncm = GetNative2ManagedMethod(method, false);//前一步没找到就通过签名去获取
 			return ncm ? ncm : (Il2CppMethodPointer)NotSupportNative2Managed;
 		}
 
+		/// @brief 获得函数指针
+		/// @param method 
+		/// @return 
 		Il2CppMethodPointer InterpreterModule::GetMethodPointer(const MethodInfo* method)
 		{
-			metadata::InterpreterImage* image = metadata::MetadataModule::GetImage(method);
+			metadata::InterpreterImage* image = metadata::MetadataModule::GetImage(method);//获取镜像
 			if (image && image->IsHotPatch())
 			{
-				Il2CppMethodPointer methodPointer = ((metadata::DifferentialHybridImage*)image)->TryGetMethodPointer(method);
+				Il2CppMethodPointer methodPointer = ((metadata::DifferentialHybridImage*)image)->TryGetMethodPointer(method);//通过method指针减去首地址得到索引，然后从容器中去尝试获取函数指针
 				if (methodPointer)
 				{
 					return methodPointer;
 				}
 			}
-			Il2CppMethodPointer ncm = GetNative2ManagedMethod(method, false);
-			return ncm ? ncm : (Il2CppMethodPointer)NotSupportNative2Managed;
+			Il2CppMethodPointer ncm = GetNative2ManagedMethod(method, false);//前一步没找到就通过签名去获取
+			return ncm ? ncm : (Il2CppMethodPointer)NotSupportNative2Managed;//找到就返回指针,没找到就报异常
 		}
 
+		/// @brief 
+		/// @param method 
+		/// @return 
 		Il2CppMethodPointer InterpreterModule::GetAdjustThunkMethodPointer(const Il2CppMethodDefinition* method)
 		{
-			metadata::InterpreterImage* image = metadata::MetadataModule::GetImage(method);
+			metadata::InterpreterImage* image = metadata::MetadataModule::GetImage(method);//获取镜像
 			if (image && image->IsHotPatch())
 			{
-				Il2CppMethodPointer methodPointer = ((metadata::DifferentialHybridImage*)image)->TryGetAdjustThunkMethodPointer(method);
+				Il2CppMethodPointer methodPointer = ((metadata::DifferentialHybridImage*)image)->TryGetAdjustThunkMethodPointer(method);//通过method指针减去首地址得到索引，然后从容器中去尝试获取函数指针
+				if (methodPointer)
 				if (methodPointer)
 				{
 					return methodPointer;
 				}
 			}
-			return GetNativeAdjustMethodMethod(method, false);
+			return GetNativeAdjustMethodMethod(method, false);//前一步没找到就通过签名去获取
 		}
 
 		Il2CppMethodPointer InterpreterModule::GetAdjustThunkMethodPointer(const MethodInfo* method)
 		{
-			metadata::InterpreterImage* image = metadata::MetadataModule::GetImage(method);
+			metadata::InterpreterImage* image = metadata::MetadataModule::GetImage(method);//获取镜像
 			if (image && image->IsHotPatch())
 			{
-				Il2CppMethodPointer methodPointer = ((metadata::DifferentialHybridImage*)image)->TryGetAdjustThunkMethodPointer(method);
+				Il2CppMethodPointer methodPointer = ((metadata::DifferentialHybridImage*)image)->TryGetAdjustThunkMethodPointer(method);//通过method指针减去首地址得到索引，然后从容器中去尝试获取函数指针
 				if (methodPointer)
 				{
 					return methodPointer;
 				}
 			}
-			return GetNativeAdjustMethodMethod(method, false);
+			return GetNativeAdjustMethodMethod(method, false);//前一步没找到就通过签名去获取
 		}
 
+		/// @brief 通过反射调用
+		/// @param method 方法指针
+		/// @param argVarIndexs 参数索引指针
+		/// @param localVarBase 函数帧栈的基准位置
+		/// @param ret 
 		void Managed2NativeCallByReflectionInvoke(const MethodInfo* method, uint16_t* argVarIndexs, StackObject* localVarBase, void* ret)
 		{
-			if (hybridclr::metadata::IsInterpreterImplement(method))
+			if (hybridclr::metadata::IsInterpreterImplement(method))//如果是解释器实现
 			{
-				IL2CPP_ASSERT(method->parameters_count <= 32);
-				StackObject newArgs[32];
+				IL2CPP_ASSERT(method->parameters_count <= 32);//保证参数索引范围正常
+				StackObject newArgs[32];//生成一个大小32的StackObject数组
 				int32_t argBaseOffset;
-				if (hybridclr::metadata::IsInstanceMethod(method))
+				if (hybridclr::metadata::IsInstanceMethod(method))//实例方法
 				{
-					newArgs[0] = localVarBase[argVarIndexs[0]];
+					newArgs[0] = localVarBase[argVarIndexs[0]];//第一个参数是自身
 					argBaseOffset = 1;
 				}
-				else
+				else//其他类型是静态方法.第一个参数是null
 				{
 					argBaseOffset = 0;
 				}
 				for (uint8_t i = 0; i < method->parameters_count; i++)
 				{
 					int32_t argOffset = argBaseOffset + i;
-					const Il2CppType* argType = GET_METHOD_PARAMETER_TYPE(method->parameters[i]);
+					const Il2CppType* argType = GET_METHOD_PARAMETER_TYPE(method->parameters[i]);//获取参数类型
 					StackObject* argValue = localVarBase + argVarIndexs[argOffset];
-					if (IsPassArgAsValue(argType))
+					if (IsPassArgAsValue(argType))//是否值传递
 					{
 						newArgs[argOffset] = *argValue;
 					}
 					else
 					{
-						newArgs[argOffset].ptr = argValue;
+						newArgs[argOffset].ptr = argValue;//引用传递
 					}
 				}
 
-				hybridclr::interpreter::Interpreter::Execute(method, newArgs, ret);
+				hybridclr::interpreter::Interpreter::Execute(method, newArgs, ret);//解释器执行
 				return;
 			}
-			if (method->invoker_method == nullptr)
+			if (method->invoker_method == nullptr)//如果没有反射方法
 			{
 				char sigName[1000];
-				ComputeSignature(method, true, sigName, sizeof(sigName) - 1);
+				ComputeSignature(method, true, sigName, sizeof(sigName) - 1);//获取签名
 
-				TEMP_FORMAT(errMsg, "GetManaged2NativeMethodPointer. ABI:%s sinature:%s not support.", HYBRIDCLR_ABI_NAME, sigName);
+				TEMP_FORMAT(errMsg, "GetManaged2NativeMethodPointer. ABI:%s sinature:%s not support.", HYBRIDCLR_ABI_NAME, sigName);//报异常错误
 				RaiseMethodNotSupportException(method, errMsg);
 			}
 			void* thisPtr;
@@ -532,6 +575,9 @@ namespace hybridclr
 		return method->invoker_method == InterpreterDelegateInvoke || method->invoker_method == InterpterInvoke;
 	}
 
+	/// @brief 获取解释器数据
+	/// @param methodInfo 
+	/// @return 
 	InterpMethodInfo* InterpreterModule::GetInterpMethodInfo(const MethodInfo* methodInfo)
 	{
 		RuntimeInitClassCCtor(methodInfo);

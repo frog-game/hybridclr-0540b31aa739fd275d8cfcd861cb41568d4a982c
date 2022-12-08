@@ -78,6 +78,10 @@ namespace hybridclr
 			IL2CPP_ASSERT(dstOffset == totalParamStackObjectSize);
 		}
 
+		/// @brief 是否将参数作为值传递
+		/// @param type 
+		/// @param locType 
+		/// @return 
 		bool IsPassArgAsValue(const Il2CppType* type, LocationDataType* locType)
 		{
 			ArgDesc argDesc = interpreter::GetTypeArgDesc(type);

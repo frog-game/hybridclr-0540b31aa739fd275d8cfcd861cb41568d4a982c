@@ -63,6 +63,7 @@ namespace hybridclr
 			int32_t leaveTarget;
 		};
 
+		/// @brief 解释器栈帧
 		struct InterpFrame
 		{
 			const InterpMethodInfo* method;
@@ -103,6 +104,7 @@ namespace hybridclr
 			uint32_t stackObjectSize; //
 		};
 
+		/// @brief 解释器方法数据
 		struct InterpMethodInfo
 		{
 			const MethodInfo* method;
