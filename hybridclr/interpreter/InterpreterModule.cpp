@@ -256,7 +256,7 @@ namespace hybridclr
 					newArgs[0] = localVarBase[argVarIndexs[0]];//第一个参数是自身
 					argBaseOffset = 1;
 				}
-				else//其他类型是静态方法.第一个参数是null
+				else//其他类型是静态方法.
 				{
 					argBaseOffset = 0;
 				}
@@ -287,25 +287,25 @@ namespace hybridclr
 				RaiseMethodNotSupportException(method, errMsg);
 			}
 			void* thisPtr;
-			uint16_t* argVarIndexBase;
-			if (hybridclr::metadata::IsInstanceMethod(method))
+			uint16_t* argVarIndexBase;//参数索引基准值
+			if (hybridclr::metadata::IsInstanceMethod(method))//实例方法
 			{
-				thisPtr = localVarBase[argVarIndexs[0]].obj;
+				thisPtr = localVarBase[argVarIndexs[0]].obj;//this指针
 				argVarIndexBase = argVarIndexs + 1;
-				if (IS_CLASS_VALUE_TYPE(method->klass))
+				if (IS_CLASS_VALUE_TYPE(method->klass))//class类型
 				{
-					thisPtr = (Il2CppObject*)thisPtr - 1;
+					thisPtr = (Il2CppObject*)thisPtr - 1;//指针前移一位,等价于向前偏移sizeof(Il2CppObject)
 				}
 			}
 			else
 			{
-				thisPtr = nullptr;
+				thisPtr = nullptr;//静态方法是NULL
 				argVarIndexBase = argVarIndexs;
 			}
-			void* invokeParams[256];
+			void* invokeParams[256];//参数
 			for (uint8_t i = 0; i < method->parameters_count; i++)
 			{
-				const Il2CppType* argType = GET_METHOD_PARAMETER_TYPE(method->parameters[i]);
+				const Il2CppType* argType = GET_METHOD_PARAMETER_TYPE(method->parameters[i]);//获得函数方法的类型
 				StackObject* argValue = localVarBase + argVarIndexBase[i];
 				if (!argType->byref && hybridclr::metadata::IsValueType(argType))
 				{

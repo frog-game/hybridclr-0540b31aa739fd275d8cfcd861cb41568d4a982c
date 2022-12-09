@@ -115,7 +115,7 @@ namespace interpreter
 			return _frameTopIdx;
 		}
 
-		/// @brief 塞入获取一个新的栈帧数据
+		/// @brief 塞入获取一个新的解释器栈帧数据
 		/// @return 
 		InterpFrame* PushFrame()
 		{
@@ -315,7 +315,7 @@ namespace interpreter
 		}
 
 
-		/// @brief 从原生获取栈数据
+		/// @brief 从AOT获取栈帧数据
 		/// @param imi 
 		/// @param argBase 
 		/// @return 
@@ -325,7 +325,7 @@ namespace interpreter
 			il2cpp_codegen_profiler_method_enter(imi->method);//开启性能分析
 #endif
 			int32_t oldStackTop = _machineState.GetStackTop();//获取栈顶索引
-			StackObject* stackBasePtr = _machineState.AllocStackSlot(imi->maxStackSize);//分配 local + evalstack + evalstack 大小的空间
+			StackObject* stackBasePtr = _machineState.AllocStackSlot(imi->maxStackSize);//分配 args + locals + evalstack 大小的空间
 			InterpFrame* newFrame = _machineState.PushFrame();//得到一个新的栈帧数据
 			*newFrame = { imi, stackBasePtr, oldStackTop, nullptr, nullptr, nullptr, 0, 0 };//初始化
 
@@ -333,7 +333,7 @@ namespace interpreter
 			if (imi->args)
 			{
 				IL2CPP_ASSERT(imi->argCount == metadata::GetActualArgumentNum(imi->method));//参数合法性判断
-				if (imi->isTrivialCopyArgs)//如果是都是这几个类型 I1,U1,I2,U2,U8的话,看代码分析像如果是简单类型不是struct类型就认为符号条件
+				if (imi->isTrivialCopyArgs)//如果都是这几个类型 I1,U1,I2,U2,U8的话,【看代码分析像如果是简单类型不是struct类型就认为符号条件】
 				{
 					CopyStackObject(stackBasePtr, argBase, imi->argStackObjectSize);//从参数复制
 				}

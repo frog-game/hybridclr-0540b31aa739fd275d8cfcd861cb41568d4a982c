@@ -26,6 +26,7 @@ namespace metadata
 		MoreSects = 0x80,
 	};
 
+	/// @brief 异常类型
 	enum class CorILExceptionClauseType
 	{
 		Exception = 0,

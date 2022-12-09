@@ -3356,7 +3356,7 @@ ir->ele = ele.locOffset;
 		}
 
 
-		byte* tranCodes = (byte*)IL2CPP_MALLOC(totalSize);
+		byte* tranCodes = (byte*)IL2CPP_MALLOC(totalSize);//从IL2CPP的内存管理模块获取内存
 
 		uint32_t tranOffset = 0;
 		for (IRBasicBlock* bb : irbbs)

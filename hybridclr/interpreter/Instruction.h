@@ -21,6 +21,7 @@ namespace interpreter
 	extern uint16_t g_instructionSizes[];
 
 	/// @brief 操作指令
+	/// uint16 代表指令id被限定占2个字节
 	enum class HiOpcodeEnum : uint16_t
 	{
 		None,
@@ -847,16 +848,17 @@ namespace interpreter
 	};
 
 #pragma region instruction //折叠代码使用
-#pragma pack(push, 1)//指把原来对齐方式设置压栈，并设新的对齐方式设置为一个字节对齐
+#pragma pack(push, 1)//指把原来对齐方式设置压栈，
+//并设新的对齐方式设置为一个字节对齐
 	//!!!{{INST
 
 	struct IRInitLocals_n_2 : IRCommon
 	{
-		uint16_t size;
-		uint8_t __pad4;
-		uint8_t __pad5;
-		uint8_t __pad6;
-		uint8_t __pad7;
+		uint16_t size;//要申请的大小
+		uint8_t __pad4;//内存对齐用的
+		uint8_t __pad5;//内存对齐用的
+		uint8_t __pad6;//内存对齐用的
+		uint8_t __pad7;//内存对齐用的
 	};
 
 

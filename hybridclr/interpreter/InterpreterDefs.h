@@ -22,6 +22,8 @@ namespace hybridclr
 			S_N,  // struct size = 3，5，6，7， > 8, size is described by stackObjectSize
 		};
 
+		/// 数据栈上的对象
+		/// @brief 因为是联合体所以这个空间是按最大变量的字节决定,uint64_t决定了是8个字节
 		union StackObject
 		{
 			uint64_t __u64;
@@ -66,30 +68,20 @@ namespace hybridclr
 		/// @brief 解释器栈帧
 		struct InterpFrame
 		{
-			const InterpMethodInfo* method;
-			StackObject* stackBasePtr;
-			int32_t oldStackTop;
-			void* ret;
-			byte* ip;
+			const InterpMethodInfo* method;//函数信息
+			StackObject* stackBasePtr;//函数帧帧地址
+			int32_t oldStackTop;//旧的栈顶索引
+			void* ret;//结果
+			byte* ip;//指令
 
-			ExceptionFlowInfo* exFlowBase;
-			int32_t exFlowCount;
-			int32_t exFlowCapaticy;
-
-			ExceptionFlowInfo* GetCurExFlow() const
-			{
-				return exFlowCount > 0 ? exFlowBase + exFlowCount - 1 : nullptr;
-			}
-
-			ExceptionFlowInfo* GetPrevExFlow() const
-			{
-				return exFlowCount > 1 ? exFlowBase + exFlowCount - 2 : nullptr;
-			}
+			ExceptionFlowInfo* exFlowBase;//异常流
+			int32_t exFlowCount;//异常流大小
+			int32_t exFlowCapaticy;//异常流容量
 		};
 
 		struct InterpExceptionClause
 		{
-			metadata::CorILExceptionClauseType flags;
+			metadata::CorILExceptionClauseType flags;//异常类型
 			int32_t tryBeginOffset;
 			int32_t tryEndOffset;
 			int32_t handlerBeginOffset;
@@ -104,22 +96,22 @@ namespace hybridclr
 			uint32_t stackObjectSize; //
 		};
 
-		/// @brief 解释器方法数据
+		/// @brief 和指令,逻辑地址,函数相关的操作
 		struct InterpMethodInfo
 		{
-			const MethodInfo* method;
-			ArgDesc* args;
-			uint32_t argCount;
-			uint32_t argStackObjectSize;
-			byte* codes;
-			uint32_t codeLength;
+			const MethodInfo* method;//函数信息
+			ArgDesc* args;//函数参数
+			uint32_t argCount;//参数长度
+			uint32_t argStackObjectSize;//参数上面StackObject的总大小
+			byte* codes;//代码数据
+			uint32_t codeLength;//代码长度
 			uint32_t maxStackSize; // args + locals + evalstack size
-			uint32_t localVarBaseOffset;
-			uint32_t evalStackBaseOffset;
+			uint32_t localVarBaseOffset;//局部变量基准偏移
+			uint32_t evalStackBaseOffset;//表达式,栈顶数据基准偏移
 			uint32_t localStackSize; // args + locals StackObject size
-			std::vector<uint64_t> resolveDatas;
-			std::vector<InterpExceptionClause*> exClauses;
-			uint32_t isTrivialCopyArgs : 1;
+			std::vector<uint64_t> resolveDatas;//解析数据---为了节省性能开销
+			std::vector<InterpExceptionClause*> exClauses;//异常方面处理
+			uint32_t isTrivialCopyArgs : 1;//是不是简单类型
 		};
 	}
 }

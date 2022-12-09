@@ -1587,8 +1587,8 @@ else \
 		const InterpMethodInfo* imi;//声明一个解释器方法数据指针
 		InterpFrame* frame;//解释器栈帧指针
 		StackObject* localVarBase;//函数帧栈的基准位置指针
-		byte* ipBase;//代码数据指针基准指针
-		byte* ip;//用来偏移用的
+		byte* ipBase;//指令寄存器基准指针
+		byte* ip;//指令寄存器
 
 		Il2CppException* lastUnwindException;//上次展开异常
 
@@ -1601,18 +1601,19 @@ else \
 		{
 			for (;;)
 			{
+				/// @brief 下面这一坨都是和指令相关
 				switch (*(HiOpcodeEnum*)ip)//指令
 				{
-#pragma region memory
+#pragma region memory //这块和内存相关
 					//!!!{{MEMORY
-				case HiOpcodeEnum::InitLocals_n_2:
+				case HiOpcodeEnum::InitLocals_n_2://初始化2字节的局部变量空间
 				{
 					uint16_t __size = *(uint16_t*)(ip + 2);
 					InitDefaultN(localVarBase + imi->localVarBaseOffset, __size);
 				    ip += 8;
 				    continue;
 				}
-				case HiOpcodeEnum::InitLocals_n_4:
+				case HiOpcodeEnum::InitLocals_n_4://初始化4字节的局部变量空间
 				{
 					uint32_t __size = *(uint32_t*)(ip + 4);
 					InitDefaultN(localVarBase + imi->localVarBaseOffset, __size);
@@ -1621,8 +1622,8 @@ else \
 				}
 				case HiOpcodeEnum::LdlocVarVar:
 				{
-					uint16_t __dst = *(uint16_t*)(ip + 2);
-					uint16_t __src = *(uint16_t*)(ip + 4);
+					uint16_t __dst = *(uint16_t*)(ip + 2);//当前执行栈顶的逻辑地址
+					uint16_t __src = *(uint16_t*)(ip + 4);//中要加载的变量的逻辑地址
 					(*(uint64_t*)(localVarBase + __dst)) = (*(uint64_t*)(localVarBase + __src));
 				    ip += 8;
 				    continue;
@@ -1881,7 +1882,7 @@ else \
 
 #pragma endregion
 
-#pragma region CONVERT
+#pragma region CONVERT //这块和转换相关
 		//!!!{{CONVERT
 				case HiOpcodeEnum::ConvertVarVar_i4_i1:
 				{
@@ -4600,7 +4601,7 @@ else \
 				    ip += 16;
 				    continue;
 				}
-				case HiOpcodeEnum::NewClassInterpVar:
+				case HiOpcodeEnum::NewCla ssInterpVar:
 				{
 					uint16_t __obj = *(uint16_t*)(ip + 2);
 					MethodInfo* __method = ((MethodInfo*)imi->resolveDatas[*(uint32_t*)(ip + 12)]);
