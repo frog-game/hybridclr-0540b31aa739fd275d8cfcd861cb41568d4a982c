@@ -177,7 +177,7 @@ namespace metadata
         {
             return LoadImageErrorCode::HOMOLOGOUS_ASSEMBLY_HAS_BEEN_LOADED;//返回errcode已经被加载过
         }
-        image->InitRuntimeMetadatas();
+        image->InitRuntimeMetadatas();//从metadata中的table去取所需要的各种数据,并存到解释器镜像中
         AOTHomologousImage::RegisterLocked(image, lock);
         return LoadImageErrorCode::OK;
     }

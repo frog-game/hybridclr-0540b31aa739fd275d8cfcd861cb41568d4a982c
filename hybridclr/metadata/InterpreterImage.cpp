@@ -113,34 +113,34 @@ namespace metadata
 	/// @brief 初始化运行时的元数据 
 	void InterpreterImage::InitRuntimeMetadatas()
 	{
-		IL2CPP_ASSERT(_rawImage.GetTable(TableType::EXPORTEDTYPE).rowNum == 0);
+		IL2CPP_ASSERT(_rawImage.GetTable(TableType::EXPORTEDTYPE).rowNum == 0);//保证没有其他导出类
 
-		InitGenericParamDefs0();
-		InitTypeDefs_0();
-		InitMethodDefs0();
-		InitGenericParamDefs();
-		InitNestedClass(); // must before typedefs1, because parent may be nested class
-		InitTypeDefs_1();
+		InitGenericParamDefs0();//初始化解释器泛型参数容器空间
+		InitTypeDefs_0();//初始化解释器定义类型或者接口容器空间
+		InitMethodDefs0();//初始化解释器方法容器空间
+		InitGenericParamDefs();//开始从table中得到泛型数据
+		InitNestedClass(); // must before typedefs1, because parent may be nested class//必须在下面InitTypeDefs_1之前,因为父类可能是嵌套类
+		InitTypeDefs_1();////初始化定义类型或者接口
 
-		InitGenericParamConstraintDefs();
+		InitGenericParamConstraintDefs();//泛型类或泛型方法的类型参数的相应限制
 
-		InitParamDefs();
-		InitMethodDefs();
-		InitFieldDefs();
-		InitFieldLayouts();
-		InitFieldRVAs();
-		InitBlittables();
-		InitMethodImpls0();
-		InitProperties();
-		InitEvents();
-		InitMethodSemantics();
-		InitConsts();
-		InitCustomAttributes();
-		InitTypeDefs_2();
-		InitClassLayouts();
-		InitInterfaces();
-		InitClass();
-		InitVTables();
+		InitParamDefs();//初始化方法参数
+		InitMethodDefs();//初始化方法
+		InitFieldDefs();//初始化字段
+		InitFieldLayouts();//初始化单个字段的偏移或是序号
+		InitFieldRVAs();//初始化定义字段到数据的映射关系
+		InitBlittables();//初始化计算Blittable类型 比如int[]
+		InitMethodImpls0();//初始化方法的重载
+		InitProperties();//初始化类到属性的映射表
+		InitEvents();//初始化类到事件的映射表
+		InitMethodSemantics();//初始化描述方法与事件或属性的关联，以及如何关联
+		InitConsts();//初始化定义#Blob流中存储的常数值与相应的字段, 参数或属性的关系
+		InitCustomAttributes();//初始化定义自定义属性
+		InitTypeDefs_2();//初始化定义类型或者接口
+		InitClassLayouts();//初始化定义描述与类被加载时应如何布局的信息
+		InitInterfaces();//初始化定义类与所实现的接口
+		InitClass();//初始化定义类
+		InitVTables();//初始化定义虚函数表
 	}
 
 	void InterpreterImage::InitTypeDefs_0()
@@ -1278,6 +1278,7 @@ namespace metadata
 		}
 	}
 
+	/// @brief 初始化泛型类或泛型方法的类型参数
 	void InterpreterImage::InitGenericParamDefs0()
 	{
 		const Table& tb = _rawImage.GetTable(TableType::GENERICPARAM);
