@@ -110,6 +110,7 @@ namespace metadata
 		image2->dynamic = 0;
 	}
 
+	/// @brief 初始化运行时的元数据 
 	void InterpreterImage::InitRuntimeMetadatas()
 	{
 		IL2CPP_ASSERT(_rawImage.GetTable(TableType::EXPORTEDTYPE).rowNum == 0);

@@ -43,6 +43,10 @@ namespace hybridclr
         return dst;
     }
 
+    /// @brief 深拷贝dll数据
+    /// @param src 
+    /// @param length 
+    /// @return 
     void* CopyBytes(const void* src, size_t length)
     {
         void* dst = IL2CPP_MALLOC(length);

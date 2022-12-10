@@ -27,6 +27,10 @@ namespace metadata
 		s_images.push_back(image);
 	}
 
+	/// @brief 通过程序集获取元数据镜像
+	/// @param ass 
+	/// @param lock 
+	/// @return 
 	AOTHomologousImage* AOTHomologousImage::FindImageByAssemblyLocked(const Il2CppAssembly* ass, il2cpp::os::FastAutoLock& lock)
 	{
 		for (AOTHomologousImage* image : s_images)

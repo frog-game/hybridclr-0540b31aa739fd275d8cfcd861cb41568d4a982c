@@ -150,27 +150,32 @@ namespace metadata
         return rpi.methodPointer;
     }
 
-
+    /// @brief 加载补充元数据
+    /// @param dllBytes 
+    /// @param dllSize 
+    /// @param mode 
+    /// @return 
     LoadImageErrorCode MetadataModule::LoadMetadataForAOTAssembly(const void* dllBytes, uint32_t dllSize, HomologousImageMode mode)
     {
+        ///不支持中断或定时等待的轻量级快速互斥锁
         il2cpp::os::FastAutoLock lock(&il2cpp::vm::g_MetadataLock);
 
-        AOTHomologousImage* image = nullptr;
-        switch (mode)
+        AOTHomologousImage* image = nullptr;//AOT元数据镜像指针
+        switch (mode)//是那个元数据模式
         {
-        case HomologousImageMode::CONSISTENT: image = new ConsistentAOTHomologousImage(); break;
-        case HomologousImageMode::SUPERSET: image = new SuperSetAOTHomologousImage(); break;
-        default: return LoadImageErrorCode::INVALID_HOMOLOGOUS_MODE;
+        case HomologousImageMode::CONSISTENT: image = new ConsistentAOTHomologousImage(); break;//一致模式,生成一致模式AOT元数据镜像
+        case HomologousImageMode::SUPERSET: image = new SuperSetAOTHomologousImage(); break;//超集模式,生成超集模式下的AOT元数据镜像
+        default: return LoadImageErrorCode::INVALID_HOMOLOGOUS_MODE;//返回错误
         }
 
-        LoadImageErrorCode err = image->Load((byte*)CopyBytes(dllBytes, dllSize), dllSize);
-        if (err != LoadImageErrorCode::OK)
+        LoadImageErrorCode err = image->Load((byte*)CopyBytes(dllBytes, dllSize), dllSize);//load dll
+        if (err != LoadImageErrorCode::OK)//检测是否OK
         {
             return err;
         }
-        if (AOTHomologousImage::FindImageByAssemblyLocked(image->GetAOTAssembly(), lock))
+        if (AOTHomologousImage::FindImageByAssemblyLocked(image->GetAOTAssembly(), lock))//查看是否已经被加载过
         {
-            return LoadImageErrorCode::HOMOLOGOUS_ASSEMBLY_HAS_BEEN_LOADED;
+            return LoadImageErrorCode::HOMOLOGOUS_ASSEMBLY_HAS_BEEN_LOADED;//返回errcode已经被加载过
         }
         image->InitRuntimeMetadatas();
         AOTHomologousImage::RegisterLocked(image, lock);

@@ -7,6 +7,7 @@ namespace hybridclr
 namespace metadata
 {
 
+	/// @brief 一致性AOT元数据镜像
 	class ConsistentAOTHomologousImage : public AOTHomologousImage
 	{
 	public:

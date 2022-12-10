@@ -34,6 +34,7 @@ namespace metadata
 		}
 	};
 
+	/// @brief 镜像
 	class Image
 	{
 	public:
